@@ -1,0 +1,82 @@
+from transformers import MarianMTModel, MarianTokenizer
+import pytesseract
+import speech_recognition as sr
+from gtts import gTTS
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+
+# Initialize translation models
+src_lang = "hi"  # Source language code (Indic language)
+tgt_lang = "en"  # Target language code (English)
+model_name = f'Helsinki-NLP/opus-mt-{src_lang}-{tgt_lang}'
+tokenizer = MarianTokenizer.from_pretrained(model_name)
+model = MarianMTModel.from_pretrained(model_name)
+
+# Function to translate text
+def translate_text(text, src_lang, tgt_lang):
+    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
+    outputs = model.generate(**inputs)
+    translated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return translated_text
+
+# Function for voice input
+def voice_input():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Speak in your preferred language:")
+        audio = recognizer.listen(source)
+    try:
+        text = recognizer.recognize_google(audio, language=src_lang)
+        return text
+    except sr.UnknownValueError:
+        print("Could not understand audio")
+        return ""
+    except sr.RequestError as e:
+        print("Could not request results; {0}".format(e))
+        return ""
+
+# Function for image input
+def image_input(image_path):
+    text = pytesseract.image_to_string(image_path, lang=src_lang)
+    return text
+
+# Translate input text to English
+def translate_input(input_text):
+    translated_text = translate_text(input_text, src_lang, tgt_lang)
+    return translated_text
+
+# Function for text-to-speech synthesis
+def text_to_speech(text, lang):
+    tts = gTTS(text=text, lang=lang)
+    tts.save("output.mp3")
+    # Play the audio
+    # Add your code here for playing audio
+
+# Example usage:
+input_text = "आप कैसे हैं?"
+translated_text = translate_input(input_text)
+print("Translated Text:", translated_text)
+
+# Example usage for voice input
+#voice_text = voice_input()
+#translated_text = translate_input(voice_text)
+#print("Translated Text:", translated_text)
+
+# Example usage for image input
+# image_path = "image.jpg"
+# image_text = image_input(image_path)
+# translated_text = translate_input(image_text)
+# print("Translated Text:", translated_text)
+
+# Example usage for text-to-speech synthesis
+# text_to_speech(translated_text, src_lang)
+
+
+
+
+
+#libraries:
+#pytesseract
+#SpeechRecognition
+#transformers
+#gtts
